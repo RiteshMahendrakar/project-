@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Avoid the Obstacles Game</title>
+    <script src="https://cdn.jsdelivr.net/npm/phaser@3.55.2/dist/phaser.js"></script>
+</head>
+<body>
+    <script>
+        // Configure the Phaser Game
+        const config = {
+            type: Phaser.AUTO,
+            width: 800,
+            height: 600,
+            physics: {
+                default: 'arcade',
+                arcade: {
+                    gravity: { y: 200 }
+                }
+            },
+            scene: {
+                preload: preload,
+                create: create,
+                update: update
+            }
+        };
+
+        let player;
+        let cursors;
+        let obstacles;
+        let gameOver = false;
+
+        // Start the Phaser game
+        const game = new Phaser.Game(config);
+
+        // Load assets
+        function preload() {
+            this.load.image('player', 'https://example.com/player.png');
+            this.load.image('obstacle', 'https://example.com/obstacle.png');
+        }
+
+        // Create game objects
+        function create() {
+            player = this.physics.add.sprite(400, 500, 'player').setCollideWorldBounds(true);
+
+            obstacles = this.physics.add.group({
+                key: 'obstacle',
+                repeat: 5,
+                setXY: { x: Phaser.Math.Between(0, 800), y: 0, stepX: 150 }
+            });
+
+            obstacles.children.iterate(function (child) {
+                child.setVelocity(Phaser.Math.Between(-100, 100), 200);
+                child.setCollideWorldBounds(true);
+                child.setBounce(1);
+            });
+
+            cursors = this.input.keyboard.createCursorKeys();
+            this.physics.add.collider(player, obstacles, hitObstacle, null, this);
+        }
+
+        // Update game state
+        function update() {
+            if (gameOver) {
+                return;
+            }
+
+            if (cursors.left.isDown) {
+                player.setVelocityX(-160);
+            } else if (cursors.right.isDown) {
+                player.setVelocityX(160);
+            } else {
+                player.setVelocityX(0);
+            }
+
+            // Check if obstacles hit the ground and reset their position
+            obstacles.children.iterate(function (child) {
+                if (child.y > 600) {
+                    child.setPosition(Phaser.Math.Between(0, 800), 0);
+                }
+            });
+        }
+
+        // Handle player collision with obstacles
+        function hitObstacle(player, obstacle) {
+            this.physics.pause();
+            player.setTint(0xff0000);
+            gameOver = true;
+        }
+    </script>
+</body>
+</html>
